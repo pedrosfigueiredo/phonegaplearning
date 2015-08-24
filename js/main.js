@@ -3,8 +3,10 @@ app = {
 
     initialize: function () {
         var self = this;
+        this.detailsURL = /^#employees\/(\d{1,})/;
+        this.registerEvents();
         this.store = new MemoryStore(function () {
-            $('body').html(new HomeView(self.store).render().el);
+            self.route();
         });
         this.registerEvents();
     },
@@ -14,6 +16,20 @@ app = {
             navigator.notification.alert(message, null, title, 'OK');
         } else {
             alert(title ? (title + ": " + message) : message);
+        }
+    },
+
+    route: function() {
+        var hash = window.location.hash;
+        if (!hash) {
+            $('body').html(new HomeView(this.store).render().el);
+            return;
+        }
+        var match = hash.match(app.detailsURL);
+        if (match) {
+            this.store.findById(Number(match[1]), function(employee) {
+                $('body').html(new EmployeeView(employee).render().el);
+            });
         }
     },
 
@@ -37,6 +53,8 @@ app = {
                 $(event.target).removeClass('tappable-active');
             });
         }
+
+        $(window).on('hashchange', $.proxy(this.route, this));
     }
 
 };
